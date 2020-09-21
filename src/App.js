@@ -1,154 +1,103 @@
-import React, { useState, useEffect } from 'react';
-import './App.css';
+import React, { useState, useEffect, useCallback } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import { bubbleSort, insertionSort, mergeSort, randomArray, sleep } from './utils';
+import SortingSection from './components/SortingSection';
+import ConfigurationPanel from './components/ConfigurationPanel';
 
-const listLength = 50;
-const [listMin, listMax] = [1, 100];
-const sortingInterval = 10;
 const randomInterval = 15;
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const useStyles = makeStyles({
+  root: {
+    overflow: 'hidden',
+    textAlign: 'center',
+    height: '100vh',
+    fontSize: 'calc(10px + 2vmin)',
+    color: 'white',
+    backgroundImage: 'linear-gradient(45deg, #142129, #3a404a)'
+  },
+});
 
-const sort = function* (list) {
-  // yield* bubbleSortHelper([...list]);
-  // yield* insertionSortHelper([...list]);
-  yield* mergeSortHelper([...list], 0, list.length-1);
-};
-
-// const bubbleSortHelper = function* (list) {
-//   for (let i = 0; i < list.length - 1; i++) {
-//     for (let j = 0; j < list.length - 1 - i; j++) {
-//       yield [[...list], [j, j+1], []];
-//       if (list[j] > list[j+1]) {
-//         [ list[j], list[j+1] ] = [ list[j+1], list[j] ]
-//       }
-//       yield [[...list], [], []];
-//     }
-//   }
-// }
-//
-// const insertionSortHelper = function* (list) {
-//   for (let i = 0; i < list.length; i++) {
-//     const t = list[i];
-//     let j = i - 1;
-//     yield [[...list], [i, j], [0, i-1]];
-//     while (j >= 0 && list[j] > t) {
-//       j--;
-//       yield [[...list], [i, j], [0, i-1]];
-//     }
-//     list.splice(j+1, 0, list[i]);
-//     list.splice(i+1, 1);
-//     yield [[...list], [], []];
-//   }
-// }
-
-const mergeSortHelper = function* (list, min, max) {
-  if (min < max) {
-    let mid = Math.floor((min + max) / 2);
-    yield* mergeSortHelper(list, min, mid);
-    yield* mergeSortHelper(list, mid+1, max);
-    while (min <= mid && mid+1 <= max) {
-      yield [[...list], [min, mid+1], [min, max]];
-      if (list[min] > list[mid+1]) {
-        mid++;
-        list.splice(min, 0, list[mid]);
-        list.splice(mid+1, 1);
-        min++;
-      } else {
-        min++;
-      }
-      yield [[...list], [], [min, max]];
-    }
-    yield [[...list], [], []];
+const sortingMethods = [
+  {
+    name: 'Bubble sort',
+    sort: bubbleSort
+  },
+  {
+    name: 'Insertion sort',
+    sort: insertionSort
+  },
+  {
+    name: 'Merge sort',
+    sort: mergeSort
   }
-};
-
-const randomArray = function* (length, [min, max] = [1, 10]) {
-  let n = length;
-  const list = new Array(length);
-  while (n > 0) {
-    yield [...list];
-    const num = Math.floor(Math.random() * (max - min + 1)) + min;
-    list.splice(length - n, 1, num);
-    n--;
-  }
-  yield [...list];
-};
-
-const isBetween = (min, max) => n => n >= min && n <= max;
+];
 
 export default function App() {
+  const classes = useStyles();
   const [list, setList] = useState([]);
-  const [isSorted, setIsSorted] = useState(true);
-  const [isSorting, setIsSorting] = useState(false);
-  const [isRandomizing, setIsRandomizing] = useState(false);
+  const [isSorted, setIsSorted] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [comparingNode, setComparingNode] = useState([]);
   const [comparingList, setComparingList] = useState([]);
+  const [listLength, setListLength] = useState(30);
+  const [section, setSection] = useState(0);
+  const [speed, setSpeed] = useState(100);
 
-  const sortList = async () => {
-    if (isSorting) return;
-    setIsSorting(true);
+  const sort = useCallback(function* (list) {
+    yield* sortingMethods[section].sort([...list], 0, list.length-1);
+  }, [section]);
+
+  const sortList = useCallback(async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
     for (const [eachList, comparingNode, comparingList] of sort(list)) {
         setList(eachList);
         setComparingNode(comparingNode);
         setComparingList(comparingList);
-        await sleep(sortingInterval);
+        await sleep(1000 / speed);
     }
     setIsSorted(true);
-    setIsSorting(false);
-  };
+    setIsProcessing(false);
+  }, [isProcessing, sort, list, speed]);
 
-  const randomizeList = async () => {
-    if (isRandomizing) return;
-    setIsRandomizing(true);
-    for (const randomizinglist of randomArray(listLength, [listMin, listMax])) {
+  const randomizeList = useCallback(async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    for (const randomizinglist of randomArray(listLength, [1, listLength])) {
       setList(randomizinglist);
       await sleep(randomInterval);
     }
     setIsSorted(false);
-    setIsRandomizing(false);
-  }
+    setIsProcessing(false);
+  }, [isProcessing, listLength]);
 
   useEffect(() => {
+    setIsSorted(true);
     randomizeList();
-  }, []);
+  }, [listLength]);
 
   return (
-    <div className="App">
-      <p>{list.map((n, i, arr) => {
-        const v = Math.round(255 * (listMax - n) / (listMax - listMin));
-        const inComparingNode = comparingNode.includes(i);
-        const inComparingList = isBetween(...comparingList)(i);
-        const props = {
-          key: i,
-          style: {
-            color: `rgb(${v}, ${v}, ${v})`,
-            fontSize: `min(calc(10px + 2vmin), ${60 / arr.length}vw)`,
-            padding: `min(6px, ${10 / arr.length}vw)`
-          }
-        };
-        const nodeProps = {
-          style: {
-            height: `min(2px, ${5 / arr.length}vw)`
-          }
-        }
-        const listProps = {
-          style: {
-            height: `min(2px, ${5 / arr.length}vw)`,
-            bottom: `max(-5px, ${-10 / arr.length}vw)`
-          }
-        }
-        return (
-          <span {...props}>
-            {n}
-            {inComparingNode && <i className={`node`} {...nodeProps} />}
-            {inComparingList && <i className={`list`} {...listProps} />}
-          </span>
-        );
-      })}</p>
-      {isSorted ?
-        <button onClick={randomizeList} data-disabled={isRandomizing}>{isRandomizing ? `Randomizing` : `Randomize`}</button>
-      : <button onClick={sortList} data-disabled={isSorting}>{isSorting ? `Sorting` : `Sort`}</button>
-      }
+    <div className={classes.root}>
+      <SortingSection
+        listRange={[1, listLength]}
+        list={list}
+        comparingNode={comparingNode}
+        comparingList={comparingList}
+        randomizeList={randomizeList}
+        sortList={sortList}
+        isSorted={isSorted}
+        isProcessing={isProcessing}
+      />
+      <ConfigurationPanel
+        sortingMethods={sortingMethods}
+        section={section}
+        setSection={setSection}
+        listLength={listLength}
+        setListLength={setListLength}
+        isProcessing={isProcessing}
+        speed={speed}
+        setSpeed={setSpeed}
+      />
     </div>
   );
 };
