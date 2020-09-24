@@ -3,6 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import SortingAlgorithms from './SortingAlgorithms';
 import ListLength from './ListLength';
 import SortingSpeed from './SortingSpeed';
+import { connect } from 'react-redux';
 
 const useStyles = makeStyles({
   panel: {
@@ -20,28 +21,22 @@ const useStyles = makeStyles({
   },
 });
 
-export default function ConfigurationPanel(props) {
-  const { sortingMethods, section, setSection, listLength, setListLength, isProcessing, speed, setSpeed } = props;
+const ConfigurationPanel = props => {
   const classes = useStyles(props);
 
   return (
     <div className={classes.panel}>
-      <SortingAlgorithms
-        sortingMethods={sortingMethods}
-        section={section}
-        setSection={setSection}
-        isProcessing={isProcessing}
-      />
-      <ListLength
-        listLength={listLength}
-        setListLength={setListLength}
-        isProcessing={isProcessing}
-      />
-      <SortingSpeed
-        speed={speed}
-        setSpeed={setSpeed}
-        isProcessing={isProcessing}
-      />
+      <SortingAlgorithms />
+      <ListLength />
+      <SortingSpeed />
     </div>
   );
-}
+};
+
+const mapStateToProps = state => ({
+  isProcessing: state.isProcessing
+});
+
+export default connect(
+  mapStateToProps
+)(ConfigurationPanel);

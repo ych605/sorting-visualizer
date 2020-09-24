@@ -1,6 +1,9 @@
 import React from 'react';
 import Button from '../Common/Button';
 import { makeStyles } from '@material-ui/core/styles';
+import { connect } from 'react-redux';
+import { updateSection } from '../../redux/actions';
+import { sortingMethods } from '../../const';
 
 const pseudoElementCommonStyles = {
   content: '""',
@@ -47,8 +50,8 @@ const useStyles = makeStyles({
   }
 });
 
-export default function SortingMethods(props) {
-  const { sortingMethods, section, setSection, isProcessing } = props;
+const SortingAlgorithms = props => {
+  const { section, updateSection, isProcessing } = props;
   const classes = useStyles();
 
   return (
@@ -58,10 +61,20 @@ export default function SortingMethods(props) {
           key={i}
           className={`${classes.button} ${section === i ? 'active' : ''}`}
           text={s.name}
-          onClick={() => setSection(i)}
+          onClick={() => updateSection(i)}
           disabled={section === i || isProcessing}
         />
       ))}
     </div>
   )
-}
+};
+
+const mapStateToProps = state => ({
+  section: state.section,
+  isProcessing: state.isProcessing
+});
+
+export default connect(
+  mapStateToProps,
+  { updateSection }
+)(SortingAlgorithms);

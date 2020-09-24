@@ -70,4 +70,4 @@ export default function SortButton(props) {
       text={buttonText[!!isSorted][!!isProcessing]}
     />
   );
-}
+};

@@ -1,6 +1,4 @@
-import bubbleSort from './sort/bubbleSort';
-import insertionSort from './sort/insertionSort';
-import mergeSort from './sort/mergeSort';
+import { bubbleSort, insertionSort, mergeSort } from './sortings';
 
 const randomArray = function* (length, [min, max] = [1, 10]) {
   let n = length;

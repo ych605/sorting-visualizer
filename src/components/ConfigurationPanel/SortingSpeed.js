@@ -1,10 +1,13 @@
 import React from 'react';
 import Slider from './SliderConfiguration';
+import { connect } from 'react-redux';
+import { updateSpeed } from '../../redux/actions';
+import defaultValues from '../../config/defaultValues';
 
-export default function ListLength(props) {
-  const { speed, setSpeed, isProcessing } = props;
-  const [min, max] = [1, 100];
-
+const SortingSpeed = props => {
+  const { speed, isProcessing, updateSpeed } = props;
+  const [min, max] = defaultValues.speedRange;
+  
   return (
     <Slider
       title={'Speed'}
@@ -12,7 +15,17 @@ export default function ListLength(props) {
       min={min}
       max={max}
       disabled={isProcessing}
-      onChangeCommitted={(e, v) => setSpeed(v)}
+      onChangeCommitted={(e, v) => updateSpeed(v)}
     />
   );
-}
+};
+
+const mapStateToProps = state => ({
+  speed: state.speed,
+  isProcessing: state.isProcessing
+});
+
+export default connect(
+  mapStateToProps,
+  { updateSpeed }
+)(SortingSpeed);
