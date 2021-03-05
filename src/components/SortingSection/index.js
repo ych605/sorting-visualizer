@@ -72,6 +72,7 @@ const SortingSection = props => {
   }, [processStart, processEnd, listRandomized, isProcessing, length, elementRange, updateList]);
 
   useEffect(() => {
+    listSorted();
     randomizeList();
   }, [length]);
 
